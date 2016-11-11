@@ -256,7 +256,8 @@ private:
         RixComputeShadingBasis(Nn, Tn, TX, TY);
         // Compute our new direction
         // half angle
-        float cosTheta = sqrtf(1.f/(1.f-(width*width*log(1.f-xi.x))));
+        float cosTheta = sqrtf(1.f/(1.f-(width*width*logf(1.f-xi.x))));
+//        float cosTheta = cos(atan(sqrtf(-(width*width*log(1.f-xi.x)))));
         float cosThetaSqrd = cosTheta*cosTheta;
         float sinTheta = sqrtf(fmax(0.f,1.f-cosThetaSqrd));
         float tanSqrd = (sinTheta*sinTheta)/cosThetaSqrd;
@@ -270,18 +271,17 @@ private:
 
         RtVector3 wh = (Ln+inDir);
         wh.Normalize();
-//        //Compute our blinn weighting and PDF
-//        //PDF
-        float blinnPdf = ((width + 1.f) * powf(cosTheta,width)) / (2.f * M_PI * 4.f * Ln.Dot(wh));
-        if(Ln.Dot(wh)<=0.f) blinnPdf = 0.f;
 
-        //Blinn NDF
+        //Beckmann NDF
         float D;
         if(cosTheta<=0.f)
             D = 0.f;
         else
-            D = (1.f/(M_PI*width*cosThetaSqrd*cosThetaSqrd))*powf(M_E,-tanSqrd/(width*width));
+        {
+//            D = (1.f/(M_PI*width*width*cosThetaSqrd*cosThetaSqrd))*expf(-tanSqrd/(width*width));
+            D = (1.f/(M_PI*width*width*cosThetaSqrd*cosThetaSqrd))*expf((cosThetaSqrd-1.f)/(width*width*cosThetaSqrd));
 
+        }
         // Shadow function
         float IdN = Nn.Dot(inDir);
         float OdN = Nn.Dot(Ln);
@@ -292,7 +292,7 @@ private:
         {
             float sinVSqrd = 1.f-IdN*IdN;
             float tanV = sqrtf(sinVSqrd/(IdN*IdN));
-            float a = sqrtf(0.5f*width+1.f)/tanV;
+            float a = 1.f/(width*tanV);
             if(a<1.6f)
             {
                 G1 = (3.535f*a+2.181f*a*a)/(1.f+2.276f*a+2.577f*a*a);
@@ -345,7 +345,7 @@ private:
         if(cosTheta<=0.f)
             D = 0.f;
         else
-            D = (1.f/(M_PI*width*cosThetaSqrd*cosThetaSqrd))*powf(M_E,-tanSqrd/(width*width));
+            D = (1.f/(M_PI*width*width*cosThetaSqrd*cosThetaSqrd))*expf(-tanSqrd/(width*width));
 
         // Shadow function
         float IdN = Nn.Dot(inDir);
@@ -373,7 +373,7 @@ private:
         {
             float sinVSqrd = 1.f-OdN*OdN;
             float tanV = sqrtf(sinVSqrd/(OdN*OdN));
-            float a = sqrtf(0.5f*width+1.f)/tanV;
+            float a = 1.f/(width*tanV);
             if(a<1.6f)
             {
                 G2 = (3.535f*a+2.181f*a*a)/(1.f+2.276f*a+2.577f*a*a);
